@@ -124,3 +124,8 @@ Try these examples:
 - "What's available next week?"
 
 The app will handle OAuth authentication on first run and then provide a fully functional booking interface!
+
+
+### Virtual Enviotnment
+- python3 -m venv .venv
+- . .venv/bin/activate
