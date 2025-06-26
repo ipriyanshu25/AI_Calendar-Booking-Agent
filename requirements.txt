@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+streamlit
+langchain
+langgraph
+langchain-openai
+langchain-community
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+python-dotenv
+requests
+pytz
+pydantic

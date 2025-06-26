@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+tailortalk-env/
+venv/
+.env/
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Credentials / tokens
+credentials.json
+token.json
+token.pickle
+
+# IDE/editor folders and files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Streamlit cache/server files
+.streamlit/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Mypy / type checking
+.mypy_cache/
+
+# Logs
+*.log
