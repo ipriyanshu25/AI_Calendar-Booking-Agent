@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/5feafcea-430c-42c7-85ab-e2cbbc5dff3c)
+
 A conversational AI agent that helps users book appointments on Google Calendar through natural language chat.
 
 ## Features
