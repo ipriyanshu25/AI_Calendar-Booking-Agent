@@ -2,7 +2,7 @@ import os
 import openai
 from datetime import datetime, timedelta
 from typing import Dict, List
-from pydantic import PrivateAttr
+from pydantic.v1 import PrivateAttr
 from langchain.schema import HumanMessage, AIMessage
 from langchain.tools import BaseTool
 from calendar_service import GoogleCalendarService
@@ -38,7 +38,7 @@ class CalendarTool(BaseTool):
 
     def _run(self, action: str, **kwargs) -> str:
         if action == "check_availability":
-            date = kwargs.get('date')
+            date = kwargs.get("date")
             return self._check_availability(date)
         elif action == "book_appointment":
             return self._book_appointment(**kwargs)
@@ -72,7 +72,7 @@ class CalendarTool(BaseTool):
                 title=title,
                 start_time=start_time,
                 end_time=end_time,
-                description="Booked via TailorTalk Agent"
+                description="Booked via TailorTalk Agent",
             )
             if success:
                 return f"✅ Successfully booked '{title}' for {start_time.strftime('%B %d, %Y at %I:%M %p')}"
@@ -83,14 +83,14 @@ class CalendarTool(BaseTool):
 
     def _parse_date(self, date_str: str) -> datetime:
         today = datetime.now()
-        date_str = date_str.lower()
-        if "today" in date_str:
+        ds = date_str.lower()
+        if "today" in ds:
             return today
-        elif "tomorrow" in date_str:
+        elif "tomorrow" in ds:
             return today + timedelta(days=1)
-        elif "next week" in date_str:
+        elif "next week" in ds:
             return today + timedelta(days=7)
-        elif "friday" in date_str:
+        elif "friday" in ds:
             days_ahead = 4 - today.weekday()
             if days_ahead <= 0:
                 days_ahead += 7
@@ -98,12 +98,12 @@ class CalendarTool(BaseTool):
         return today + timedelta(days=1)
 
     def _parse_time(self, date: datetime, time_str: str) -> datetime:
-        time_str = time_str.lower()
-        if "afternoon" in time_str:
+        ts = time_str.lower()
+        if "afternoon" in ts:
             hour = 14
-        elif "morning" in time_str:
+        elif "morning" in ts:
             hour = 10
-        elif "3" in time_str and "pm" in time_str:
+        elif "3" in ts and "pm" in ts:
             hour = 15
         else:
             hour = 14
@@ -123,7 +123,7 @@ class BookingAgent:
         self.llm = ChatOpenAI(
             model_name="gpt-3.5-turbo",
             temperature=0.7,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
         )
         self.calendar_tool = CalendarTool()
         self.conversation_state = ConversationState()
@@ -134,15 +134,13 @@ class BookingAgent:
         if intent == "greeting":
             response = "Hello! I'm your personal booking assistant. I can help you schedule appointments on your calendar. What would you like to book?"
         elif intent == "check_availability":
-            date_info = self._extract_date_info(user_message)
-            availability = self.calendar_tool._run("check_availability", date=date_info)
+            availability = self.calendar_tool._run("check_availability", date=user_message)
             response = f"{availability}\n\nWhich time slot would you prefer?"
         elif intent == "book_appointment":
             details = self._extract_booking_details(user_message)
             if self._validate_booking_details(details):
                 response = self.calendar_tool._run(
-                    "book_appointment",
-                    title=details.get('title', 'Meeting'), date_str=details['date'], time_str=details['time']
+                    "book_appointment", title=details.get("title", "Meeting"), date_str=details["date"], time_str=details["time"]
                 )
             else:
                 response = "I need more information. Please specify the date and time for your appointment."
@@ -152,29 +150,35 @@ class BookingAgent:
         return response
 
     def _analyze_intent(self, message: str) -> str:
-        msg = message.lower()
-        if any(w in msg for w in ["hi","hello","hey"]): return "greeting"
-        if any(w in msg for w in ["available","free","check","when"]): return "check_availability"
-        if any(w in msg for w in ["book","schedule","confirm","reserve"]): return "book_appointment"
+        m = message.lower()
+        if any(w in m for w in ["hi", "hello", "hey"]):
+            return "greeting"
+        if any(w in m for w in ["available", "free", "check", "when"]):
+            return "check_availability"
+        if any(w in m for w in ["book", "schedule", "confirm", "reserve"]):
+            return "book_appointment"
         return "conversation"
 
-    def _extract_date_info(self, message: str) -> str:
-        return message
-
     def _extract_booking_details(self, message: str) -> Dict:
-        details: Dict = {}
+        d: Dict[str, str] = {}
         m = message.lower()
-        if "tomorrow" in m: details['date'] = "tomorrow"
-        elif "friday" in m: details['date'] = "friday"
-        elif "next week" in m: details['date'] = "next week"
-        if "3 pm" in m or "3pm" in m: details['time'] = "3 pm"
-        elif "afternoon" in m: details['time'] = "afternoon"
-        elif "morning" in m: details['time'] = "morning"
-        details['title'] = "Meeting"
-        return details
+        if "tomorrow" in m:
+            d["date"] = "tomorrow"
+        elif "friday" in m:
+            d["date"] = "friday"
+        elif "next week" in m:
+            d["date"] = "next week"
+        if "3 pm" in m or "3pm" in m:
+            d["time"] = "3 pm"
+        elif "afternoon" in m:
+            d["time"] = "afternoon"
+        elif "morning" in m:
+            d["time"] = "morning"
+        d["title"] = "Meeting"
+        return d
 
     def _validate_booking_details(self, details: Dict) -> bool:
-        return 'date' in details and 'time' in details
+        return "date" in details and "time" in details
 
     def _generate_contextual_response(self, user_message: str) -> str:
         system_prompt = (
@@ -185,10 +189,10 @@ class BookingAgent:
             "4. Guide the conversation towards booking a specific time slot\n"
             "Keep responses concise and focused on booking appointments."
         )
-        messages = [{"role": "system", "content": system_prompt}] + self.conversation_state.messages[-3:]
+        msgs = [{"role": "system", "content": system_prompt}] + self.conversation_state.messages[-3:]
         try:
             resp = self.llm.invoke([
-                HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in messages
+                HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in msgs
             ])
             return resp.content
         except Exception:
